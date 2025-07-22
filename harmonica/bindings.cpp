@@ -1,5 +1,6 @@
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+#include <vector>
 
 #include "bindings.hpp"
 #include "constants/constants.hpp"
@@ -153,12 +154,13 @@ const void jax_light_curve_quad_ld(void* out_tuple, const void** in) {
 
     // Compute orbit and derivatives wrt x={t0, p, a, i, e, w}.
     double d, z, nu;
-    double dd_dx[n_x_derivatives], dnu_dx[n_x_derivatives];
+    std::vector<double> dd_dx(n_x_derivatives);
+    std::vector<double> dnu_dx(n_x_derivatives);
     orbital.compute_eccentric_orbit_and_derivatives(
       times[i], d, z, nu, dd_dx, dnu_dx);
 
     // Compute flux and derivatives wrt y={d, nu, {us}, {rs}}.
-    double df_dy[n_y_derivatives];
+    std::vector<double> df_dy(n_y_derivatives);
     flux.transit_flux_and_derivatives(d, z, nu, f[i], df_dy);
 
     // Compute total derivatives wrt z={t0, p, a, i, e, w, {us}, {rs}}.
@@ -191,7 +193,7 @@ const void jax_light_curve_nonlinear_ld(void* out_tuple, const void** in) {
   double omega = ((double*) in[8])[0];
   double us[4] {((double*) in[9])[0], ((double*) in[10])[0],
                 ((double*) in[11])[0], ((double*) in[12])[0]};
-  double rs[n_rs];
+  std::vector<double> rs(n_rs);
   for (int i = 0; i < n_rs; ++i) {
     rs[i] = ((double*) in[i + 13])[0];
   }
